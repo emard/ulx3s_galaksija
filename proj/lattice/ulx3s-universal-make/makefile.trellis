@@ -49,10 +49,12 @@ CLK0_OPTIONS = \
   --clkout2_name=clkos2 \
   --clkout2=25
 
+# galaksija.v     is galaksija classic
+# galaksija2024.v is galaksija 2024
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
-  ../../../galaksija.v \
+  ../../../galaksija2024.v \
   ../../../rom_memory.v \
   ../../../font_rom.v \
   ../../../video.v \
