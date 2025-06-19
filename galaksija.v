@@ -240,9 +240,9 @@ video
 			if (uart_out=="\"") begin keys[8'd34] <= 1; keys[8'd53] <= 1; end
 			if (uart_out=="#") begin keys[8'd35] <= 1; keys[8'd53] <= 1; end
 			if (uart_out=="$") begin keys[8'd36] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="%") begin keys[8'd37] <= 1; keys[8'd53] <= 1; end
+			if (uart_out==8'd37) begin keys[8'd37] <= 1; keys[8'd53] <= 1; end // 37=% PERCENT
 			if (uart_out=="&") begin keys[8'd38] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="\\") begin keys[8'd39] <= 1; keys[8'd53] <= 1; end
+			if (uart_out==8'd92) begin keys[8'd39] <= 1; keys[8'd53] <= 1; end // 92=\ BACKSLASH
 
 			if (uart_out=="(") begin keys[8'd40] <= 1; keys[8'd53] <= 1; end
 			if (uart_out==")") begin keys[8'd41] <= 1; keys[8'd53] <= 1; end
