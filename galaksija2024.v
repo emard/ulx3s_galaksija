@@ -269,8 +269,8 @@ bram_true2p_2clk
     .dual_port(0),
     .data_width(8),
     .addr_width(16),
-    //.initial_filename("galaksija2024.mem")
-    .initial_filename("galaksija.mem")
+    .initial_filename("galaksija2024.mem")
+    //.initial_filename("galaksija.mem")
  )
  ram64k
  (
