@@ -168,29 +168,26 @@ video
 		idata = 8'hff;
 		casex ({~wr_n,~rd_n,mreq_n,addr[15:0]})
 			// MEM MAP
-			{3'b010,16'b0000xxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x0000-0x0fff
-			{3'b010,16'b0001xxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x1000-0x1fff
+			{3'b010,16'b0000xxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
+			{3'b010,16'b0001xxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
 
-			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = key_out; rd_key = 1; end         // 0x2000-0x27ff
+			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = key_out; rd_key = 1; end // 0x2000-0x27ff
 
-			{3'b010,16'b00101xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x2800-0x2fff
-			{3'b010,16'b00110xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x3000-0x37ff
-			{3'b010,16'b00111xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x3800-0x3fff
-			{3'b010,16'b01xxxxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x4000-0xffff
-			{3'b010,16'b10xxxxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x4000-0xffff
-			{3'b010,16'b11xxxxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end         // 0x4000-0xffff
+			{3'b010,16'b00101xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x2800-0x2fff
+			{3'b010,16'b00110xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3000-0x37ff
+			{3'b010,16'b00111xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3800-0x3fff
+			{3'b010,16'b01xxxxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x4000-0x7fff
+			{3'b010,16'b1xxxxxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x8000-0xffff
 
 			// MEM MAP
 			{3'b100,16'b00100xxxxxxxxxxx}: wr_latch = 1; // 0x2000-0x27ff
 			{3'b100,16'b00101xxxxxxxxxxx}: begin wr_video = 1; wr_ram = 1; end // 0x2800-0x2fff
 			{3'b100,16'b00110xxxxxxxxxxx}: wr_ram   = 1; // 0x3000-0x37ff
-			{3'b100,16'b00111xxxxxxxxxxx}: wr_ram   = 1; // 0x3000-0x37ff
-			{3'b100,16'b01xxxxxxxxxxxxxx}: wr_ram   = 1;
-			{3'b100,16'b10xxxxxxxxxxxxxx}: wr_ram   = 1;
-			{3'b100,16'b11xxxxxxxxxxxxxx}: wr_ram   = 1;
-			//{3'b100,16'b10xxxxxxxxxxxxxx}: wr_ram2= 1;			
-			
-			//{3'b100,16'b11xxxxxxxxxxxxxx}: wr_ram2= 1; // 0x3000-0x37ff
+			{3'b100,16'b00111xxxxxxxxxxx}: wr_ram   = 1; // 0x3800-0x3fff
+			{3'b100,16'b01xxxxxxxxxxxxxx}: wr_ram   = 1; // 0x4000-0x7fff
+			{3'b100,16'b100xxxxxxxxxxxxx}: wr_ram   = 1; // 0x8000-0x9fff
+			//{3'b100,16'b101xxxxxxxxxxxxx}: wr_ram   = 1; // 0xA000-0xbfff
+			//{3'b100,16'b11xxxxxxxxxxxxxx}: wr_ram   = 1; // 0xC000-0xffff
 		endcase
 	end
 	
