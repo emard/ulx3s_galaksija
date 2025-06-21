@@ -276,15 +276,7 @@ video
 		.reset_n(cpu_resetn), .clk(clk), .wait_n(wait_n), .int_n(int_n), .nmi_n(nmi_n), .busrq_n(busrq_n), .di(idata)
 	);
 	
-wire cs_0,cs_1,cs_2,cs_3;
-
-assign cs_0 = ~addr[15] & ~addr[14];
-assign cs_1 = ~addr[15] &  addr[14];
-assign cs_2 =  addr[15] & ~addr[14];
-assign cs_3 =  addr[15] &  addr[14];
-
 // 64K RAM initialized with ROM content
-assign we_ram = wr_ram & (cs_0 | cs_1 | cs_2 | cs_3);
 bram_true2p_2clk
  #(
     .dual_port(0),
@@ -297,7 +289,7 @@ bram_true2p_2clk
  (
    .clk_a(clk),
    .addr_a(addr[15:0]),
-   .we_a(we_ram),
+   .we_a(wr_ram),
    .data_in_a(odata),
    .data_out_a(ram_out)
  );
