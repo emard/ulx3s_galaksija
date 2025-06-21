@@ -179,7 +179,7 @@ video
 			{3'b010,16'h0xxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
 			{3'b010,16'h1xxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
 
-			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = {key_out[7:5],key_out[4]&flash_miso,key_out[3:0]}; rd_key = 1; end // 0x2000-0x27ff and flash
+			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = key_out; rd_key = 1; end // 0x2000-0x27ff (keys, flash_miso, serial_rx)
 
 			{3'b010,16'b00101xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x2800-0x2fff
 			{3'b010,16'b00110xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3000-0x37ff
@@ -211,7 +211,7 @@ video
 	assign flash_csn   = ~(latch[4] & reset_n); // 1/4 74HC00 pins 11-13
 	assign flash_holdn = 1'b1;
 	// flash miso to U11 74HCT251 pin 15 D[4]
-	// logical "and" with key_out[4]: D L T 🠋 4 , LIST
+	// logical "and" with key data row[4]: D L T 🠋 4 , LIST
 
 	reg prev_starting = 0;
 	always @(posedge clk) 
@@ -226,7 +226,7 @@ video
 		end
 		if (rd_key)
 		begin
-			key_out <= (keys[addr[5:0]]==1) ? 8'hfe : 8'hff;
+			key_out <= (keys[addr[5:0]]==1) || (addr[2:0]==3'b100 && flash_miso==1'b0) ? 8'hfe : 8'hff;
 		end
 
 		if(rx_valid)
