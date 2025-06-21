@@ -114,6 +114,8 @@ video
 		
 	reg keys[63:0];
 
+	reg [5:0] latch; // U8 74HCT174
+
 	wire rx_valid;
 	wire [7:0] uart_out;
 	wire starting;
@@ -174,10 +176,10 @@ video
 		idata = 8'hff;
 		casex ({~wr_n,~rd_n,mreq_n,addr[15:0]})
 			// MEM MAP
-			{3'b010,16'b0000xxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
-			{3'b010,16'b0001xxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
+			{3'b010,16'h0xxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
+			{3'b010,16'h1xxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
 
-			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = key_out; rd_key = 1; end // 0x2000-0x27ff
+			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = {key_out[7:5],key_out[4]&flash_miso,key_out[3:0]}; rd_key = 1; end // 0x2000-0x27ff and flash
 
 			{3'b010,16'b00101xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x2800-0x2fff
 			{3'b010,16'b00110xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3000-0x37ff
@@ -186,7 +188,7 @@ video
 			{3'b010,16'b1xxxxxxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x8000-0xffff
 
 			// MEM MAP
-			{3'b100,16'b00100xxxxxxxxxxx}: wr_latch = 1; // 0x2000-0x27ff
+			{3'b100,12'h203,4'b1xxx}: wr_latch = 1; // 0x2038-0x203f
 			{3'b100,16'b00101xxxxxxxxxxx}: begin wr_video = 1; wr_ram = 1; end // 0x2800-0x2fff
 			{3'b100,16'b00110xxxxxxxxxxx}: wr_ram   = 1; // 0x3000-0x37ff
 			{3'b100,16'b00111xxxxxxxxxxx}: wr_ram   = 1; // 0x3800-0x3fff
@@ -197,6 +199,20 @@ video
 		endcase
 	end
 	
+	always @(posedge clk)
+	begin
+		if(wr_latch)
+			latch[5:0] <= odata[7:2];
+	end
+
+	assign flash_mosi  = latch[1];
+	assign flash_clk   = latch[2];
+	assign flash_wpn   = latch[3];
+	assign flash_csn   = ~(latch[4] & reset_n); // 1/4 74HC00 pins 11-13
+	assign flash_holdn = 1'b1;
+	// flash miso to U11 74HCT251 pin 15 D[4]
+	// logical "and" with key_out[4]: D L T 🠋 4 , LIST
+
 	reg prev_starting = 0;
 	always @(posedge clk) 
 	begin	
@@ -211,7 +227,7 @@ video
 		if (rd_key)
 		begin
 			key_out <= (keys[addr[5:0]]==1) ? 8'hfe : 8'hff;
-		end			
+		end
 
 		if(rx_valid)
 		begin

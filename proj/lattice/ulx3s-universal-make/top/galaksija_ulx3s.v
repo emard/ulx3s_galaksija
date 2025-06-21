@@ -113,13 +113,16 @@ wire [17:0] audio_data;
 wire [23:0] S_audio = 1'b0;
 wire S_spdif_out;
 
-  assign wifi_gpio0 = btn[0];
+  wire flash_clk;
+
+  // assign wifi_gpio0 = btn[0];
   // holding reset for 2 sec will activate ESP32 loader
-  assign led[0] = btn[0];
+  assign led[7:1] = {flash_miso,flash_mosi,flash_clk,flash_csn,flash_holdn,flash_wpn,1'b0};
+  assign led[0] = ~btn[1];
   // visual indication of btn press
   // btn(0) has inverted logic
   always @(posedge clk_pixel) begin
-    reset_n <= btn[0] & locked;
+    reset_n <= ~btn[1] & locked;
   end
 
   clk_25_250_125_25
@@ -139,7 +142,6 @@ wire S_spdif_out;
     assign clk_pixel_shift = clk_pixel_shift2;
   endgenerate
 
-  wire flash_clk;
 
   galaksija
   galaksija_inst
