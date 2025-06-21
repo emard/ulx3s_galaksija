@@ -37,6 +37,12 @@ output wire wifi_rxd,
 input wire wifi_txd,
 inout wire wifi_en,
 output wire wifi_gpio0,
+input  wire flash_miso,
+output wire flash_mosi,
+// output wire flash_clk, // USRMCLK
+output wire flash_csn,
+output wire flash_holdn,
+output wire flash_wpn,
 output wire adc_csn,
 output wire adc_sclk,
 output wire adc_mosi,
@@ -91,13 +97,6 @@ inout wire usb_fpga_dn
 // Digital Video (differential outputs)
 // i2c shared for digital video and RTC
 // US2 port
-// Flash ROM (SPI0)
-// commented out because it can't be used as GPIO
-// when bitstream is loaded from config flash
-//flash_miso   : in      std_logic;
-//flash_mosi   : out     std_logic;
-//flash_clk    : out     std_logic;
-//flash_csn    : out     std_logic;
 
 localparam C_ddr = 1'b1; // 1-DDR 0-SDR
 
@@ -140,6 +139,8 @@ wire S_spdif_out;
     assign clk_pixel_shift = clk_pixel_shift2;
   endgenerate
 
+  wire flash_clk;
+
   galaksija
   galaksija_inst
   (
@@ -147,11 +148,24 @@ wire S_spdif_out;
     .pixclk(clk_pixel),
     .reset_n(reset_n),
     .ser_rx(ftdi_txd),
+    .flash_csn(flash_csn),
+    .flash_holdn(flash_holdn),
+    .flash_wpn(flash_wpn),
+    .flash_clk(flash_clk),
+    .flash_mosi(flash_mosi),
+    .flash_miso(flash_miso),
     .LCD_DAT(S_LCD_DAT),
     .LCD_HS(S_vga_hsync),
     .LCD_VS(S_vga_vsync),
     .LCD_DEN(S_vga_blank)
   );
+
+  wire spi_sck_or = ~reset_n ? 0 : flash_clk;
+  USRMCLK usrmclk_inst (
+    .USRMCLKI(spi_sck_or),
+    //.USRMCLKO(flash_clk),
+    .USRMCLKTS(~reset_n)
+  ) /* synthesis syn_noprune=1 */;
 
   // register stage to offload routing
   reg R_vga_hsync, R_vga_vsync, R_vga_blank;

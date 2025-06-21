@@ -5,6 +5,12 @@ module galaksija
     input pixclk, // 19.2 MHz (now 25 MHz)
     input reset_n, // 1 when clocks are ready to be used
     input ser_rx, // serial keyboard
+    output flash_csn,
+    output flash_holdn,
+    output flash_wpn,
+    output flash_clk,
+    output flash_mosi,
+    input  flash_miso,
     output [7:0] LCD_DAT,
     output LCD_CLK,
     output LCD_HS,
