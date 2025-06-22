@@ -4,7 +4,8 @@ module galaksija
     input clk, // 12 MHz (now 25 MHz)
     input pixclk, // 19.2 MHz (now 25 MHz)
     input reset_n, // 1 when clocks are ready to be used
-    input ser_rx, // serial keyboard
+    input serial_rx,
+    output serial_tx,
     output eeprom_csn,
     output eeprom_holdn,
     output eeprom_wpn,
@@ -131,9 +132,6 @@ video
 	end
 
 	wire key_bit;
-	wire key_eeprom_mux;
-
-	wire rd_key;
 	wire wr_latch;
 
 	always @(*)
@@ -144,8 +142,6 @@ video
 		wr_video = 0;
 		wr_ram = 0;
 
-		rd_key = 0;
-
 		wr_latch = 0;
 		idata = 8'hff;
 		casex ({~wr_n,~rd_n,mreq_n,addr[15:0]})
@@ -153,7 +149,9 @@ video
 			{3'b010,16'h0xxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
 			{3'b010,16'h1xxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
 
-			{3'b010,4'h2,12'b0xxxxxxxxxxx}: idata[0] = key_eeprom_mux; // 0x2000-0x27ff (keys, eeprom_miso, serial_rx)
+			{3'b010,16'h203A}: idata[0] = serial_rx;
+			{3'b010,16'h203C}: idata[0] = eeprom_miso;
+			{3'b010,16'h20xx}: idata[0] = key_bit; // 0x2000-0x20ff read keyboard
 			{3'b010,4'h2,12'b1xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x2800-0x2fff
 			{3'b010,4'h3,12'b0xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3000-0x37ff
 			{3'b010,4'h3,12'b1xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3800-0x3fff
@@ -182,7 +180,8 @@ video
 	assign eeprom_wpn   = latch[3];
 	assign eeprom_csn   = ~latch[4]; // 1/4 74HC00 pins 11-13
 	assign eeprom_holdn = 1'b1;
-	assign key_eeprom_mux = key_bit & ~(eeprom_miso==1'b0 && addr==16'h203C);
+
+	assign serial_tx    = latch[5];
 
 	tv80n cpu (
 		.m1_n(m1_n), .mreq_n(mreq_n), .iorq_n(iorq_n), 
