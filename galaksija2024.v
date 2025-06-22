@@ -5,12 +5,12 @@ module galaksija
     input pixclk, // 19.2 MHz (now 25 MHz)
     input reset_n, // 1 when clocks are ready to be used
     input ser_rx, // serial keyboard
-    output flash_csn,
-    output flash_holdn,
-    output flash_wpn,
-    output flash_clk,
-    output flash_mosi,
-    input  flash_miso,
+    output eeprom_csn,
+    output eeprom_holdn,
+    output eeprom_wpn,
+    output eeprom_clk,
+    output eeprom_mosi,
+    input  eeprom_miso,
     input  ps2clk,
     input  ps2data,
     output [7:0] LCD_DAT,
@@ -58,8 +58,8 @@ wire [7:0] ram_out;
        Video signal generator 
    ----------------------------*/
 
-reg rd_video;
-reg wr_video;
+wire rd_video;
+wire wr_video;
 
 assign LCD_CLK = pixclk;
 assign LCD_RST = 1'b1;
@@ -98,8 +98,7 @@ video
   .data(odata)
  );
 
-	reg ce = 0;
-	reg [7:0] idata; // CPU input
+	wire [7:0] idata; // CPU input
 
 	wire m1_n;
 	wire mreq_n;
@@ -132,9 +131,10 @@ video
 	end
 
 	wire key_bit;
-	
-	reg rd_key;
-	reg wr_latch;
+	wire key_eeprom_mux;
+
+	wire rd_key;
+	wire wr_latch;
 
 	always @(*)
 	begin
@@ -153,7 +153,7 @@ video
 			{3'b010,16'h0xxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
 			{3'b010,16'h1xxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
 
-			{3'b010,4'h2,12'b0xxxxxxxxxxx}: begin idata[0] = key_bit; rd_key = 1; end // 0x2000-0x27ff (keys, flash_miso, serial_rx)
+			{3'b010,4'h2,12'b0xxxxxxxxxxx}: idata[0] = key_eeprom_mux; // 0x2000-0x27ff (keys, eeprom_miso, serial_rx)
 			{3'b010,4'h2,12'b1xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x2800-0x2fff
 			{3'b010,4'h3,12'b0xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3000-0x37ff
 			{3'b010,4'h3,12'b1xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3800-0x3fff
@@ -177,11 +177,12 @@ video
 			latch[5:0] <= odata[7:2];
 	end
 
-	assign flash_mosi  = latch[1];
-	assign flash_clk   = latch[2];
-	assign flash_wpn   = latch[3];
-	assign flash_csn   = ~(latch[4] & reset_n); // 1/4 74HC00 pins 11-13
-	assign flash_holdn = 1'b1;
+	assign eeprom_mosi  = latch[1];
+	assign eeprom_clk   = latch[2];
+	assign eeprom_wpn   = latch[3];
+	assign eeprom_csn   = ~latch[4]; // 1/4 74HC00 pins 11-13
+	assign eeprom_holdn = 1'b1;
+	assign key_eeprom_mux = key_bit & ~(eeprom_miso==1'b0 && addr==16'h203C);
 
 	tv80n cpu (
 		.m1_n(m1_n), .mreq_n(mreq_n), .iorq_n(iorq_n), 
