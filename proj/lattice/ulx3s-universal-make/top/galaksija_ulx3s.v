@@ -76,8 +76,10 @@ output wire [3:0] gpdi_dp,
 output wire [3:0] gpdi_dn,
 inout wire gpdi_scl,
 inout wire gpdi_sda,
-inout wire usb_fpga_dp,
-inout wire usb_fpga_dn
+output wire usb_fpga_pu_dp,
+output wire usb_fpga_pu_dn,
+input wire usb_fpga_dp,
+input wire usb_fpga_dn
 );
 
 // enable sound output
@@ -113,12 +115,16 @@ wire [17:0] audio_data;
 wire [23:0] S_audio = 1'b0;
 wire S_spdif_out;
 
+  // PS2 keyboard requires pullups
+  assign usb_fpga_pu_dp = 1'b1;
+  assign usb_fpga_pu_dn = 1'b1;
+
   wire flash_clk;
 
   // assign wifi_gpio0 = btn[0];
   // holding reset for 2 sec will activate ESP32 loader
-  assign led[7:1] = {flash_miso,flash_mosi,flash_clk,flash_csn,flash_holdn,flash_wpn,1'b0};
-  assign led[0] = ~btn[1];
+  assign led[7:0] = {flash_miso,flash_mosi,flash_clk,flash_csn,flash_holdn,flash_wpn,1'b0,btn[1]};
+  // assign led[7:0] = ps2_key[10:3];
   // visual indication of btn press
   // btn(0) has inverted logic
   always @(posedge clk_pixel) begin
@@ -142,7 +148,6 @@ wire S_spdif_out;
     assign clk_pixel_shift = clk_pixel_shift2;
   endgenerate
 
-
   galaksija
   galaksija_inst
   (
@@ -150,6 +155,8 @@ wire S_spdif_out;
     .pixclk(clk_pixel),
     .reset_n(reset_n),
     .ser_rx(ftdi_txd),
+    .ps2clk(usb_fpga_dp),
+    .ps2data(usb_fpga_dn),
     .flash_csn(flash_csn),
     .flash_holdn(flash_holdn),
     .flash_wpn(flash_wpn),

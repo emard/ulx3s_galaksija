@@ -11,6 +11,8 @@ module galaksija
     output flash_clk,
     output flash_mosi,
     input  flash_miso,
+    input  ps2clk,
+    input  ps2data,
     output [7:0] LCD_DAT,
     output LCD_CLK,
     output LCD_HS,
@@ -112,35 +114,7 @@ video
 	wire nmi_n = 1'b1;
 	wire busrq_n = 1'b1;
 		
-	reg keys[63:0];
-
 	reg [5:0] latch; // U8 74HCT174
-
-	wire rx_valid;
-	wire [7:0] uart_out;
-	wire starting;
-	uart_rx uart(
-		.clk(clk),
-		.resetn(reset_n),
-
-		.ser_rx(ser_rx),
-
-		.cfg_divider(f_clk/baud),
-
-		.data(uart_out),
-		.valid(rx_valid),
-
-		.starting(starting)
-	);
-
-	integer num;
-	initial 
-	begin
-		for(num=0;num<63;num=num+1)
-		begin
-			keys[num] <= 0;
-		end
-	end
 
 	reg[31:0] int_cnt = 0;
 
@@ -157,7 +131,7 @@ video
 		end
 	end
 
-	reg [7:0] key_out;
+	wire key_bit;
 	
 	reg rd_key;
 	reg wr_latch;
@@ -179,7 +153,7 @@ video
 			{3'b010,16'h0xxx}: begin idata = ram_out; rd_ram = 1; end // 0x0000-0x0fff
 			{3'b010,16'h1xxx}: begin idata = ram_out; rd_ram = 1; end // 0x1000-0x1fff
 
-			{3'b010,4'h2,12'b0xxxxxxxxxxx}: begin idata = key_out; rd_key = 1; end // 0x2000-0x27ff (keys, flash_miso, serial_rx)
+			{3'b010,4'h2,12'b0xxxxxxxxxxx}: begin idata[0] = key_bit; rd_key = 1; end // 0x2000-0x27ff (keys, flash_miso, serial_rx)
 			{3'b010,4'h2,12'b1xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x2800-0x2fff
 			{3'b010,4'h3,12'b0xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3000-0x37ff
 			{3'b010,4'h3,12'b1xxxxxxxxxxx}: begin idata = ram_out; rd_ram = 1; end // 0x3800-0x3fff
@@ -209,73 +183,30 @@ video
 	assign flash_csn   = ~(latch[4] & reset_n); // 1/4 74HC00 pins 11-13
 	assign flash_holdn = 1'b1;
 
-	reg prev_starting = 0;
-	always @(posedge clk) 
-	begin	
-		prev_starting	<= starting;
-		if (starting==1 && prev_starting==0)
-		begin
-			for(num=0;num<63;num=num+1)
-			begin
-				keys[num] <= 0;
-			end
-		end
-		if (rd_key)
-		begin
-			// flash miso to U11 74HCT251 pin 15 D[4]
-			// logical "and" with key data row[4]: D L T 🠋 4 , LIST
-			// flash_miso=0 acts like any of keys in row[4] pressed
-			key_out <= (keys[addr[5:0]]==1) || (addr[2:0]==3'd4 && flash_miso==1'b0) ? 8'hfe : 8'hff;
-		end
-
-		if(rx_valid)
-		begin
-			for(num=0;num<63;num=num+1)
-			begin
-				keys[num] <= 0;
-			end
-			if (uart_out>="A" && uart_out<="Z")  keys[uart_out-8'd64] <= 1;
-			if (uart_out>="a" && uart_out<="z") keys[uart_out-8'd96] <= 1;
-			if (uart_out>="0" && uart_out<="9")  keys[uart_out-8'd48+8'd32] <= 1;
-			if (uart_out==8'd10 || uart_out==8'd13)  keys[8'd48] <= 1; // ENTER
-			if (uart_out==8'd8 || uart_out==8'd127)  keys[8'd29] <= 1; // BACKSPACE to CURSOR LEFT
-			if (uart_out==8'd27)  keys[8'd49] <= 1; // ESC to BREAK
-
-			if (uart_out==" ")  keys[8'd31] <= 1;
-			if (uart_out=="_") begin keys[8'd32] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="!") begin keys[8'd33] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="\"") begin keys[8'd34] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="#") begin keys[8'd35] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="$") begin keys[8'd36] <= 1; keys[8'd53] <= 1; end
-			if (uart_out==8'd37) begin keys[8'd37] <= 1; keys[8'd53] <= 1; end // 37=% PERCENT
-			if (uart_out=="&") begin keys[8'd38] <= 1; keys[8'd53] <= 1; end
-			if (uart_out==8'd92) begin keys[8'd39] <= 1; keys[8'd53] <= 1; end // 92=\ BACKSLASH
-
-			if (uart_out=="(") begin keys[8'd40] <= 1; keys[8'd53] <= 1; end
-			if (uart_out==")") begin keys[8'd41] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="+") begin keys[8'd42] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="*") begin keys[8'd43] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="<") begin keys[8'd44] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="-") begin keys[8'd45] <= 1; keys[8'd53] <= 1; end
-			if (uart_out==">") begin keys[8'd46] <= 1; keys[8'd53] <= 1; end
-			if (uart_out=="?") begin keys[8'd47] <= 1; keys[8'd53] <= 1; end
-
-			if (uart_out==";") begin keys[8'd42] <= 1; end
-			if (uart_out==":") begin keys[8'd43] <= 1; end
-			if (uart_out==",") begin keys[8'd44] <= 1; end
-			if (uart_out=="=") begin keys[8'd45] <= 1; end
-			if (uart_out==".") begin keys[8'd46] <= 1; end
-			if (uart_out=="/") begin keys[8'd47] <= 1; end
-		end
-	end
-	
 	tv80n cpu (
 		.m1_n(m1_n), .mreq_n(mreq_n), .iorq_n(iorq_n), 
 		.rd_n(rd_n), .wr_n(wr_n), .rfsh_n(rfsh_n), .halt_n(halt_n), .busak_n(busak_n),
 		.A(addr), .do(odata), 
 		.reset_n(cpu_resetn), .clk(clk), .wait_n(wait_n), .int_n(int_n), .nmi_n(nmi_n), .busrq_n(busrq_n), .di(idata)
 	);
-	
+
+        wire [10:0] ps2_key;
+
+        // Get PS/2 keyboard events
+        ps2 ps2_inst (
+                .clk(clk),
+                .ps2_clk(ps2clk),
+                .ps2_data(ps2data),
+                .ps2_key(ps2_key)
+        );
+
+        galaksija_keyboard galaksija_keyboard_inst (
+                .clk(clk),
+                .addr(addr[5:0]),
+                .ps2_key(ps2_key),
+                .key_out(key_bit)
+        );
+
 // 64K RAM initialized with ROM content
 bram_true2p_2clk
  #(

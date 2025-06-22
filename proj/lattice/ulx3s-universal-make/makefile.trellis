@@ -59,6 +59,8 @@ VERILOG_FILES = \
   ../../../font_rom.v \
   ../../../video.v \
   ../../../uart_rx.v \
+  ../../../ps2.v \
+  ../../../galaksija_keyboard.v \
   ../../../tv80_alu.v \
   ../../../tv80_core.v \
   ../../../tv80_mcode.v \
