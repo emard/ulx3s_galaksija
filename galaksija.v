@@ -4,7 +4,19 @@ module galaksija
     input clk, // 12 MHz (now 25 MHz)
     input pixclk, // 19.2 MHz (now 25 MHz)
     input reset_n, // 1 when clocks are ready to be used
-    input ser_rx, // serial keyboard
+    // serial keyboard
+    input serial_rx,
+    // not currently in use but for direct
+    // interchangeability with galaksija2024.v
+    output serial_tx,
+    output eeprom_csn,
+    output eeprom_holdn,
+    output eeprom_wpn,
+    output eeprom_clk,
+    output eeprom_mosi,
+    input  eeprom_miso,
+    input  ps2clk,
+    input  ps2data,
     output [7:0] LCD_DAT,
     output LCD_CLK,
     output LCD_HS,
@@ -108,7 +120,7 @@ video
 		.clk(clk),
 		.resetn(reset_n),
 
-		.ser_rx(ser_rx),
+		.ser_rx(serial_rx),
 
 		.cfg_divider(f_clk/baud),
 
