@@ -29,7 +29,7 @@ module tv80n (/*AUTOARG*/
   // Outputs
   m1_n, mreq_n, iorq_n, rd_n, wr_n, rfsh_n, halt_n, busak_n, A, do, 
   // Inputs
-  reset_n, clk, wait_n, int_n, nmi_n, busrq_n, di
+  reset_n, clk, cen, wait_n, int_n, nmi_n, busrq_n, di
   );
 
   parameter Mode = 0;    // 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
@@ -38,7 +38,8 @@ module tv80n (/*AUTOARG*/
 
 
   input         reset_n; 
-  input         clk; 
+  input         clk;
+  input		cen;
   input         wait_n; 
   input         int_n; 
   input         nmi_n; 
@@ -64,7 +65,6 @@ module tv80n (/*AUTOARG*/
   reg           nxt_rd_n; 
   reg           nxt_wr_n; 
   
-  wire          cen;
   wire          intcycle_n;
   wire          no_read;
   wire          write;
@@ -72,8 +72,6 @@ module tv80n (/*AUTOARG*/
   reg [7:0]     di_reg;
   wire [6:0]    mcycle;
   wire [6:0]    tstate;
-
-  assign    cen = 1;
 
   tv80_core #(Mode, IOWait) i_tv80_core
     (
@@ -148,6 +146,7 @@ module tv80n (/*AUTOARG*/
     end // always @ *
 
   always @(negedge clk)
+    if (cen)
     begin
       if (!reset_n)
         begin
@@ -166,6 +165,7 @@ module tv80n (/*AUTOARG*/
     end // always @ (posedge clk or negedge reset_n)
 
   always @(posedge clk)
+    if (cen)
     begin
       if (!reset_n)
         begin

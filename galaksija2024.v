@@ -183,11 +183,17 @@ video
 
 	assign serial_tx    = latch[5];
 
+	// clock reduction 25/8=3.125 MHz
+	reg [2:0] clk_reducer;
+	always @(posedge clk)
+	    clk_reducer <= clk_reducer+1;
+        wire cen_6M25 = &clk_reducer;
+
 	tv80n cpu (
 		.m1_n(m1_n), .mreq_n(mreq_n), .iorq_n(iorq_n), 
 		.rd_n(rd_n), .wr_n(wr_n), .rfsh_n(rfsh_n), .halt_n(halt_n), .busak_n(busak_n),
 		.A(addr), .do(odata), 
-		.reset_n(cpu_resetn), .clk(clk), .wait_n(wait_n), .int_n(int_n), .nmi_n(nmi_n), .busrq_n(busrq_n), .di(idata)
+		.reset_n(cpu_resetn), .clk(clk), .cen(cen_6M25), .wait_n(wait_n), .int_n(int_n), .nmi_n(nmi_n), .busrq_n(busrq_n), .di(idata)
 	);
 
         wire [10:0] ps2_key;
