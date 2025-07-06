@@ -1,31 +1,8 @@
-// File top/galaksija_ulx3s.vhd translated with vhd2vl v3.0 VHDL to Verilog RTL translator
-// vhd2vl settings:
-//  * Verilog Module Declaration Style: 2001
-
-// vhd2vl is Free (libre) Software:
-//   Copyright (C) 2001 Vincenzo Liguori - Ocean Logic Pty Ltd
-//     http://www.ocean-logic.com
-//   Modifications Copyright (C) 2006 Mark Gonzales - PMC Sierra Inc
-//   Modifications (C) 2010 Shankar Giri
-//   Modifications Copyright (C) 2002-2017 Larry Doolittle
-//     http://doolittle.icarus.com/~larry/vhd2vl/
-//   Modifications (C) 2017 Rodrigo A. Melo
-//
-//   vhd2vl comes with ABSOLUTELY NO WARRANTY.  Always check the resulting
-//   Verilog for correctness, ideally with a formal verification tool.
-//
-//   You are welcome to redistribute vhd2vl under certain conditions.
-//   See the license (GPLv2) file included with the source for details.
-
-// The result of translation follows.  Its copyright status should be
-// considered unchanged from the original VHDL.
-
 //--------------------------
-// ULX3S Top level for SNAKE
+// ULX3S Top level for GALAKSIJA
 // http://github.com/emard
 //--------------------------
 // vendor specific library for clock, ddr and differential video out
-// no timescale needed
 
 module galaksija_ulx3s(
 input wire clk_25mhz,
@@ -52,24 +29,6 @@ output wire usb_fpga_pu_dn,
 input wire usb_fpga_dp,
 input wire usb_fpga_dn
 );
-
-// enable sound output
-// main clock input from 25MHz clock source
-// UART0 (FTDI USB slave serial)
-// FTDI additional signaling
-// UART1 (WiFi serial)
-// WiFi additional signaling
-// '0' will disable wifi by default
-// ADC MAX11123
-// SDRAM
-// Onboard blinky
-// GPIO
-// SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
-// Audio jack 3.5mm
-// Onboard antenna 433 MHz
-// Digital Video (differential outputs)
-// i2c shared for digital video and RTC
-// US2 port
 
 localparam C_ddr = 1'b1; // 1-DDR 0-SDR
 
@@ -160,10 +119,11 @@ wire S_spdif_out;
   );
 
   wire spi_sck_or = flash_clk & reset_n;
-  USRMCLK usrmclk_inst (
+  (* noprune *) USRMCLK
+  usrmclk_inst (
     .USRMCLKI(spi_sck_or),
-    //.USRMCLKO(flash_clk),
-    .USRMCLKTS(~reset_n)
+    // .USRMCLKO(flash_clk_noprune),
+    .USRMCLKTS(flash_csn)
   ) /* synthesis syn_noprune=1 */;
 
   // register stage to offload routing
