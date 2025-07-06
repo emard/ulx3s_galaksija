@@ -24,8 +24,8 @@ module galaksija
     output mreq_n
 );
 
-parameter integer f_clk = 25000000;
-parameter integer baud = 115200; // serial keyboard baud rate
+parameter integer f_clk = 25000000; // Hz core input clock
+parameter integer f_galaksija = 3072000; // Hz galaksija Z80 CPU
 
 /* ------------------------
        Clock generator 
@@ -183,17 +183,23 @@ video
 
 	assign serial_tx    = latch[5];
 
-	// clock reduction 25/8=3.125 MHz
-	reg [2:0] clk_reducer;
+	parameter integer clk_reducer_bits = 20;
+	reg [clk_reducer_bits:0] clk_reducer;
+	parameter integer clk_reducer_inc = (f_galaksija*64'd1 << clk_reducer_bits) / f_clk;
+	wire [clk_reducer_bits:0] clk_reducer_next = clk_reducer + clk_reducer_inc;
 	always @(posedge clk)
-	    clk_reducer <= clk_reducer+1;
-        wire cen_6M25 = &clk_reducer;
+	    clk_reducer <=
+	    {
+	      clk_reducer_next[clk_reducer_bits] & ~clk_reducer[clk_reducer_bits],
+	      clk_reducer_next[clk_reducer_bits-1:0]
+	    };
+	wire cen_galaksija = clk_reducer[clk_reducer_bits];
 
 	tv80n cpu (
 		.m1_n(m1_n), .mreq_n(mreq_n), .iorq_n(iorq_n), 
 		.rd_n(rd_n), .wr_n(wr_n), .rfsh_n(rfsh_n), .halt_n(halt_n), .busak_n(busak_n),
 		.A(addr), .do(odata), 
-		.reset_n(cpu_resetn), .clk(clk), .cen(cen_6M25), .wait_n(wait_n), .int_n(int_n), .nmi_n(nmi_n), .busrq_n(busrq_n), .di(idata)
+		.reset_n(cpu_resetn), .clk(clk), .cen(cen_galaksija), .wait_n(wait_n), .int_n(int_n), .nmi_n(nmi_n), .busrq_n(busrq_n), .di(idata)
 	);
 
         wire [10:0] ps2_key;
