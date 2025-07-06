@@ -159,7 +159,7 @@ wire S_spdif_out;
     .LCD_DEN(S_vga_blank)
   );
 
-  wire spi_sck_or = ~reset_n ? 0 : flash_clk;
+  wire spi_sck_or = flash_clk & reset_n;
   USRMCLK usrmclk_inst (
     .USRMCLKI(spi_sck_or),
     //.USRMCLKO(flash_clk),
