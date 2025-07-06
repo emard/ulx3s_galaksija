@@ -54,6 +54,7 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
+  clocks/ecp5pll.sv \
   ../../../galaksija2024.v \
   ../../../rom_memory.v \
   ../../../font_rom.v \

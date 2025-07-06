@@ -2,7 +2,7 @@
 PROJECT = galaksija
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 12
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
 FLASH_SPI = 4
@@ -51,11 +51,14 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
-  ../../../galaksija.v \
+  clocks/ecp5pll.sv \
+  ../../../galaksija2024.v \
   ../../../rom_memory.v \
   ../../../font_rom.v \
   ../../../video.v \
   ../../../uart_rx.v \
+  ../../../ps2.v \
+  ../../../galaksija_keyboard.v \
   ../../../tv80_alu.v \
   ../../../tv80_core.v \
   ../../../tv80_mcode.v \

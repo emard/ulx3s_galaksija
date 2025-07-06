@@ -101,6 +101,7 @@ wire S_spdif_out;
     reset_n <= ~btn[1] & locked;
   end
 
+/*
   clk_25_250_125_25
   clkgen_inst
   (
@@ -110,7 +111,25 @@ wire S_spdif_out;
     .clkos2(clk_pixel), //  25 MHz
     .locked(locked)
   );
-  
+*/
+
+  wire [3:0] clocks;
+  wire clk_pixel_shift1 = clocks[0];
+  wire clk_pixel_shift2 = clocks[0];
+  wire clk_pixel = clocks[1];
+  ecp5pll
+  #(
+      .in_hz(25000000),
+    .out0_hz(25000000*5*(C_ddr?1:2)),
+    .out1_hz(25000000)
+  )
+  ecp5pll_inst
+  (
+    .clk_i(clk_25mhz),
+    .clk_o(clocks),
+    .locked(locked)
+  );
+
   generate
   if(C_ddr)
     assign clk_pixel_shift = clk_pixel_shift1;

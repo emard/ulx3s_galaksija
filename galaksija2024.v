@@ -59,8 +59,8 @@ wire [7:0] ram_out;
        Video signal generator 
    ----------------------------*/
 
-wire rd_video;
-wire wr_video;
+reg rd_video;
+reg wr_video;
 
 assign LCD_CLK = pixclk;
 assign LCD_RST = 1'b1;
@@ -99,7 +99,7 @@ video
   .data(odata)
  );
 
-	wire [7:0] idata; // CPU input
+	reg [7:0] idata; // CPU input
 
 	wire m1_n;
 	wire mreq_n;
@@ -132,7 +132,7 @@ video
 	end
 
 	wire key_bit;
-	wire wr_latch;
+	reg wr_latch;
 
 	always @(*)
 	begin
